@@ -1,14 +1,12 @@
 package com.clipflow.user.controller;
 
+import com.clipflow.auth.context.UserContext;
 import com.clipflow.common.ApiResponse;
 import com.clipflow.user.dto.LoginRequest;
 import com.clipflow.user.dto.RegisterRequest;
 import com.clipflow.user.service.UserService;
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/users")
@@ -30,8 +28,14 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ApiResponse<Long> login(
+    public ApiResponse<String> login(
             @Valid @RequestBody LoginRequest request) {
         return ApiResponse.success(userService.login(request));
+    }
+
+    @GetMapping("/me")
+    public ApiResponse<Long> me() {
+        Long userId = UserContext.getUserId();
+        return ApiResponse.success(userId);
     }
 }

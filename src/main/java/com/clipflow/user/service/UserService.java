@@ -1,6 +1,7 @@
 package com.clipflow.user.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.clipflow.auth.util.JwtUtil;
 import com.clipflow.common.exception.BusinessException;
 import com.clipflow.user.dto.LoginRequest;
 import com.clipflow.user.dto.RegisterRequest;
@@ -13,9 +14,11 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 public class UserService {
 
     private final UserMapper userMapper;
+    private final JwtUtil jwtUtil;
 
-    public UserService(UserMapper userMapper) {
+    public UserService(UserMapper userMapper, JwtUtil jwtUtil) {
         this.userMapper = userMapper;
+        this.jwtUtil =  jwtUtil;
     }
 
     public Long register(RegisterRequest request) {
@@ -37,7 +40,7 @@ public class UserService {
         return user.getId();
     }
 
-    public Long login(LoginRequest request) {
+    public String login(LoginRequest request) {
         User user = userMapper.selectOne(
                 new LambdaQueryWrapper<User>()
                         .eq(User::getUsername, request.getUsername())
@@ -56,6 +59,6 @@ public class UserService {
             throw new BusinessException(10002, "用户名或密码错误");
         }
 
-        return user.getId();
+        return jwtUtil.generateToken(user.getId());
     }
 }
