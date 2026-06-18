@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.clipflow.common.PageResponse;
 import com.clipflow.common.exception.BusinessException;
+import com.clipflow.mq.message.VideoDeleteMessage;
+import com.clipflow.mq.producer.VideoDeleteProducer;
 import com.clipflow.storage.service.StorageService;
 import com.clipflow.video.dto.VideoDetailResponse;
 import com.clipflow.video.entity.Video;
@@ -18,12 +20,15 @@ public class VideoService {
 
     private final StorageService storageService;
     private final VideoMapper videoMapper;
+    private final VideoDeleteProducer videoDeleteProducer;
 
     public VideoService(
             StorageService storageService,
-            VideoMapper videoMapper) {
+            VideoMapper videoMapper,
+            VideoDeleteProducer videoDeleteProducer) {
         this.storageService = storageService;
         this.videoMapper = videoMapper;
+        this.videoDeleteProducer = videoDeleteProducer;
     }
 
     public Long publish(
@@ -153,19 +158,34 @@ public class VideoService {
         Video video = videoMapper.selectById(videoId);
 
         if (video == null) {
-            throw new BusinessException(21005, "视频不存在");
+            throw new BusinessException(
+                    21005,
+                    "视频不存在"
+            );
         }
 
         if (!video.getUserId().equals(userId)) {
-            throw new BusinessException(21007, "无权删除该视频");
+            throw new BusinessException(
+                    21007,
+                    "无权删除该视频"
+            );
         }
-
-        storageService.delete(video.getObjectName());
 
         int deleted = videoMapper.deleteById(videoId);
 
         if (deleted == 0) {
-            throw new BusinessException(21008, "视频记录删除失败");
+            throw new BusinessException(
+                    21008,
+                    "视频记录删除失败"
+            );
         }
+
+        VideoDeleteMessage message =
+                new VideoDeleteMessage(
+                        videoId,
+                        video.getObjectName()
+                );
+
+        videoDeleteProducer.send(message);
     }
 }

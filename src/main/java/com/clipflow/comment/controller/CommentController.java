@@ -8,7 +8,10 @@ import com.clipflow.common.ApiResponse;
 import com.clipflow.common.PageResponse;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
+@Tag(name = "评论模块", description = "发布、查询和删除视频评论")
 @RestController
 @RequestMapping("/api/videos/{videoId}/comments")
 public class CommentController {
@@ -19,6 +22,7 @@ public class CommentController {
         this.commentService = commentService;
     }
 
+    @Operation(summary = "发布评论")
     @PostMapping
     public ApiResponse<CommentResponse> create(
             @PathVariable Long videoId,
@@ -31,6 +35,7 @@ public class CommentController {
         );
     }
 
+    @Operation(summary = "分页查询视频评论")
     @GetMapping
     public ApiResponse<PageResponse<CommentResponse>> getComments(
             @PathVariable Long videoId,
@@ -42,6 +47,7 @@ public class CommentController {
         );
     }
 
+    @Operation(summary = "删除评论")
     @DeleteMapping("/{commentId}")
     public ApiResponse<Void> delete(
             @PathVariable Long commentId, @PathVariable Long videoId) {
